@@ -256,54 +256,74 @@ solution: `<23>`
 
 ### 20) How many customers does Steve Patterson have with a credit limit above 100 000 EUR?
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM customers
+WHERE salesRepEmployeeNumber = (
+    SELECT employeeNumber
+    FROM employees
+    WHERE lastName = 'Patterson' AND firstName = 'Steve'
+) AND creditLimit > 100000;
 ```
 
-solution: `<your solution here>`
+solution: `<3>`
 
 ### 21) How many orders have been shipped to our customers?
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM orders
+WHERE customerNumber IN (
+    SELECT customerNumber
+    FROM customers
+);
 ```
 
-solution: `<your solution here>`
+solution: `<326>`
 
 
 ### 22) How much products does the biggest product line have? And which product line is that?
 ```
-<Your SQL query here>
+SELECT productLine, COUNT(productLine) AS count
+FROM products
+GROUP BY productLine
+ORDER BY count DESC
+LIMIT 1;
 ```
 
-solution: `<your solution here>`
+solution: `<Classic cars 38>`
 
 ### 23) How many products are low in stock? (below 100 pieces)
 ```
-<Your SQL query here>
+SELECT COUNT(*) FROM products
+WHERE quantityInStock < 100;
 ```
 
-solution: `<your solution here>`
+solution: `<2>`
 
 ### 24) How many products have more the 100 pieces in stock, but are below 500 pieces.
 ```
-<Your SQL query here>
+SELECT COUNT(*) FROM products
+WHERE quantityInStock > 100 AND quantityInStock <500;
 ```
 
-solution: `<your solution here>`
+solution: `<3>`
 
 
 ### 25) How many orders did we ship between and including June 2004 & September 2004
 ```
-<Your SQL query here>
+SELECT COUNT(*) FROM orders
+WHERE STATUS = 'Shipped' BETWEEN '2004-06' AND '2004-09';
 ```
 
-solution: `<your solution here>`
+solution: `<326>`
 
 ### 26) How many customers share the same last name as an employee of ours?
 ```
-<Your SQL query here>
+SELECT COUNT(*) FROM customers
+WHERE contactLastName IN (SELECT 
+lastName FROM employees);
 ```
 
-solution: `<your solution here>`
+solution: `<9>`
 
 ### 27) Give the product code for the most expensive product for the consumer?
 ```
