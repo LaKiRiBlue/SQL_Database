@@ -1,0 +1,12 @@
+[DB_USER] :
+Super User : root (password  : root)
+User : kiri (password : kiri)
+
+Db created : kiridb
+
+To connect to mariadb :
+
+mysql -u [DB_USER] -p -h localhost
+
+
+!!!!!!!!!!>> replace [DB_USER] by kiri or root!!!!!!!!!!!!
