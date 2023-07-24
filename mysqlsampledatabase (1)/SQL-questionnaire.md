@@ -327,66 +327,129 @@ solution: `<9>`
 
 ### 27) Give the product code for the most expensive product for the consumer?
 ```
-<Your SQL query here>
+SELECT productCode
+FROM products
+WHERE MSRP= (
+    SELECT MAX(MSRP)
+    FROM products
+);
 ```
 
-solution: `<your solution here>`
+solution: `<S10_1949>`
 
 
 ### 28) What product (product code) offers us the largest profit margin (difference between buyPrice & MSRP).
 ```
-<Your SQL query here>
+SELECT productCode
+FROM products
+WHERE MSRP - buyPrice = (
+    SELECT MAX(MSRP - buyPrice )
+    FROM products
+);
 ```
 
-solution: `<your solution here>`
+solution: `<S10_1949>`
 
 ### 29) How much profit (rounded) can the product with the largest profit margin (difference between buyPrice & MSRP) bring us.
 ```
-<Your SQL query here>
+SELECT ROUND(MSRP - buyPrice)
+FROM products
+WHERE MSRP - buyPrice = (
+    SELECT MAX(MSRP - buyPrice)
+    FROM products
+);
 ```
 
-solution: `<your solution here>`
+solution: `<116>`
 
 ### 30) Given the product number of the products (separated with spaces) that have never been sold?
 ```
-<Your SQL query here>
+SELECT productCode
+FROM products
+WHERE productCode NOT IN (
+    SELECT productCode
+    FROM orderdetails
+);
 ```
 
-solution: `<your solution here>`
+solution: `<S18_3233>`
 
 
 ### 31) How many products give us a profit margin below 30 dollar?
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM products
+WHERE MSRP - buyPrice < 30;
+
 ```
 
-solution: `<your solution here>`
+solution: `<23 products>`
 
 ### 32) What is the product code of our most popular product (in number purchased)?
 ```
-<Your SQL query here>
+SELECT productCode
+FROM products
+WHERE productCode IN (
+    SELECT productCode
+    FROM orderdetails
+    GROUP BY productCode
+    ORDER BY COUNT(productCode) DESC
+);
+
+USE MariaDB does not accept LIMIT in subqueries
 ```
 
-solution: `<your solution here>`
+solution: `<S10_1949>`
 
 ### 33) How many of our popular product did we effectively ship?
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM products
+WHERE productCode IN (
+    SELECT productCode
+    FROM orderdetails
+    GROUP BY productCode
+    ORDER BY COUNT(productCode) DESC
+) AND productCode IN (
+    SELECT productCode
+    FROM orderdetails
+    WHERE orderNumber IN (
+        SELECT orderNumber
+        FROM orders
+        WHERE status = 'shipped'
+    )
+);
 ```
 
-solution: `<your solution here>`
+solution: `<109>`
 
 
 ### 34) Which check number paid for order 10210. Tip: Pay close attention to the date fields on both tables to solve this.  
 ```
-<Your SQL query here>
+SELECT checkNumber
+FROM payments
+WHERE customerNumber IN (
+    SELECT customerNumber
+    FROM orders
+    WHERE orderNumber = 10210
+) AND paymentDate IN (
+    SELECT paymentDate
+    FROM orders
+    WHERE orderNumber = 10210
+);
 ```
 
 solution: `<your solution here>`
 
 ### 35) Which order was paid by check CP804873?
 ```
-<Your SQL query here>
+SELECT orderNumber
+FROM orders
+WHERE customerNumber IN (
+    SELECT customerNumber
+    FROM payments
+    WHERE checkNumber = 'CP804873'
+);
 ```
 
 solution: `<your solution here>`
@@ -401,52 +464,112 @@ solution: `<your solution here>`
 
 ### 38) In which country do we have the most customers that we do not have an office in?
 ```
-<Your SQL query here>
+SELECT country
+FROM customers
+WHERE country NOT IN (
+    SELECT country
+    FROM offices
+    ORDER BY COUNT(country) DESC
+);
+
+SELECT COUNT(country) FROM customers
+WHERE country NOT IN (
+    SELECT country
+    FROM offices
+    GROUP BY country
+    ORDER BY COUNT(country) DESC
+);
 ```
 
 solution: `<your solution here>`
 
 ### 39) What city has our biggest office in terms of employees?
 ```
-<Your SQL query here>
+SELECT city
+FROM offices
+WHERE officeCode IN (
+    SELECT officeCode
+    FROM employees
+    GROUP BY officeCode
+    ORDER BY COUNT(officeCode) DESC
+);
+
 ```
 
-solution: `<your solution here>`
+solution: `<ySan Francisco>`
 
 ### 40) How many employees does our largest office have, including leadership?
 
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM employees
+WHERE officeCode IN (
+    SELECT officeCode
+    FROM offices
+    WHERE officeCode IN (
+        SELECT officeCode
+        FROM employees
+        GROUP BY officeCode
+        ORDER BY COUNT(officeCode) DESC
+    )
+);
 ```
 
-solution: `<your solution here>`
+solution: `<23>`
 
 
 ### 41) How many employees do we have on average per country (rounded)?
 ```
-<Your SQL query here>
+SELECT ROUND(AVG(count))
+FROM (
+    SELECT COUNT(employeeNumber) AS count
+    FROM employees
+    GROUP BY officeCode
+) AS count;
 ```
 
-solution: `<your solution here>`
+solution: `<3>`
 
 ### 42) What is the total value of all shipped & resolved sales ever combined?
 ```
-<Your SQL query here>
+SELECT SUM(quantityOrdered * priceEach)
+FROM orderdetails
+WHERE orderNumber IN (
+    SELECT orderNumber
+    FROM orders
+    WHERE status IN ('shipped', 'resolved')
+);
 ```
 
-solution: `<your solution here>`
+solution: `<8999330.52>`
 
 ### 43) What is the total value of all shipped & resolved sales in the year 2005 combined? (based on shipping date)
 ```
-<Your SQL query here>
+SELECT SUM(quantityOrdered * priceEach)
+FROM orderdetails
+WHERE orderNumber IN (
+    SELECT orderNumber
+    FROM orders
+    WHERE status IN ('shipped', 'resolved') AND YEAR(shippedDate) = 2005
+);
 ```
 
-solution: `<your solution here>`
+solution: `<1427944.97>`
 
 
 ### 44) What was our most profitable year ever (based on shipping date), considering all shipped & resolved orders?
 ```
-<Your SQL query here>
+SELECT YEAR(shippedDate), SUM(quantityOrdered * priceEach)
+FROM orders
+WHERE orderNumber IN (
+    SELECT orderNumber
+    FROM orders
+    WHERE status IN ('shipped', 'resolved')
+)
+GROUP BY YEAR(shippedDate)
+ORDER BY SUM(quantityOrdered * priceEach) DESC
+LIMIT 1;
+
 ```
 
 solution: `<your solution here>`
@@ -475,10 +598,15 @@ solution: `<your solution here>`
 
 ### 48) How many customers do we have that never ordered anything?
 ```
-<Your SQL query here>
+SELECT COUNT(*)
+FROM customers
+WHERE customerNumber NOT IN (
+    SELECT customerNumber
+    FROM orders
+);
 ```
 
-solution: `<your solution here>`
+solution: `<24>`
 
 ### 49) What is the last name of our best employee in terms of revenue?
 ```
